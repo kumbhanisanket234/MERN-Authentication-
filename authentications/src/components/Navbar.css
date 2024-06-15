@@ -1,0 +1,9 @@
+  
+  .navbar-brand{
+    color: skyblue !important;
+    font-size: 1.5rem !important;
+  }
+  
+  .navbar a:hover{
+    color: skyblue !important;
+  }

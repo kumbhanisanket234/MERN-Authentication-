@@ -9,25 +9,19 @@ const MongoStore = require('connect-mongo');
 
 const session = require("express-session")
 const passport = require("passport");
-// require('dotenv').config();
+require('dotenv').config();
 
-// const OAuth2Strategy = require("passport-google-oauth2").Strategy;
-// const FacebookStrategy = require('passport-facebook').Strategy;
-// const GitHubStrategy = require('passport-github2').Strategy;
-// const LinkedInStrategy = require('passport-linkedin-oauth2').Strategy;
-// const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
+const OAuth2Strategy = require("passport-google-oauth2").Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const GitHubStrategy = require('passport-github2').Strategy;
 
-// const clientIdGoogle = process.env.GOOGLE_CLIENT_ID;
-// const clientIdGithub = process.env.GITHUB_CLIENT_ID;
-// const clientIdLinkedin = process.env.LINKEDIN_CLIENT_ID;
-// const clientIdFacebook = process.env.FACEBOOK_CLIENT_ID;
-// const clientIdMicrosoft = process.env.MICROSOFT_CLIENT_ID;
+const clientIdGoogle = process.env.GOOGLE_CLIENT_ID;
+const clientIdGithub = process.env.GITHUB_CLIENT_ID;
+const clientIdFacebook = process.env.FACEBOOK_CLIENT_ID;
 
-// const clientSecretGoogle = process.env.GOOGLE_CLIENT_SECRET;
-// const clientSecretGithub = process.env.GITHUB_CLIENT_SECRET;
-// const clientSecretLinkedin = process.env.LINKEDIN_CLIENT_SECRET;
-// const clientSecretFacebook = process.env.FACEBOOK_CLIENT_SECRET;
-// const clientSecretMicrosoft = process.env.MICROSOFT_CLIENT_SECRET;
+const clientSecretGoogle = process.env.GOOGLE_CLIENT_SECRET;
+const clientSecretGithub = process.env.GITHUB_CLIENT_SECRET;
+const clientSecretFacebook = process.env.FACEBOOK_CLIENT_SECRET;
 
 const UserOtpVerification = require("./Models/OtpVerification");
 const router = express.Router();
@@ -527,96 +521,6 @@ passport.use(new GitHubStrategy({
     }
 ));
 
-//Microsoft Strategy
-passport.use(new OIDCStrategy({
-    identityMetadata: 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
-    clientID: clientIdMicrosoft,
-    clientSecret: clientSecretMicrosoft,
-    responseType: 'code id_token',
-    responseMode: 'form_post',
-    redirectUrl: 'http://localhost:3001/auth/microsoft/callback',
-    allowHttpForRedirectUrl: true,
-    clientSecret: clientSecretMicrosoft,
-    validateIssuer: false,
-    passReqToCallback: false,
-    scope: ['profile', 'offline_access', 'email']
-},
-    async (iss, sub, profile, accessToken, refreshToken, done) => {
-        console.log("profile", profile);
-        try {
-            let user = await UserModel.findOne({ microsoftId: profile.oid });
-            if (user) {
-                return done(null, user);
-            } else {
-                user = new UserModel({
-                    microsoftId: profile.oid,
-                    fullName: profile.displayName,
-                    microsoftEmail: profile._json.preferred_username,
-                    image: profile._json.picture
-                });
-
-                const token = jwt.sign(
-                    { id: profile.id, microsoftEmail: profile._json.preferred_username, fullName: profile.displayName, image: profile._json.picture },
-                    'shhhh', //jwtSecret
-                    {
-                        expiresIn: '2h'
-                    }
-                )
-
-                user.token = token
-
-                await user.save();
-                return done(null, user);
-            }
-        } catch (err) {
-            console.error('Error saving user:', err);
-            return done(err, null);
-        }
-    }
-));
-
-// LinkedIn Strategy
-passport.use(new LinkedInStrategy({
-    clientID: clientIdLinkedin,
-    clientSecret: clientSecretLinkedin,
-    callbackURL: "/auth/linkedin/callback",
-    scope: ['r_liteprofile', 'r_emailaddress']
-},
-    async (accessToken, refreshToken, profile, cb) => {
-        console.log(profile);
-        try {
-            let user = await UserModel.findOne({ linkedinId: profile.id })
-            if (user) {
-                return cb(null, user)
-            } else {
-                user = new UserModel({
-                    linkedinId: profile.id,
-                    fullName: profile.displayName,
-                    linkedinEmail: profile.emails[0].value,
-                    image: profile.photos[0].value
-                })
-
-                const token = jwt.sign(
-                    { id: profile.id, linkedinEmail: profile.emails[0].value, fullName: profile.displayName, image: profile.photos[0].value },
-                    'shhhh', //jwtSecret
-                    {
-                        expiresIn: '2h'
-                    }
-                )
-
-                user.token = token
-
-                await user.save()
-                return cb(null, user)
-            }
-        } catch (err) {
-            console.error('Error saving user:', err);
-            return cb(err, null)
-        }
-    }
-));
-
-
 // Google Routes
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }))
 app.get("/auth/google/callback", passport.authenticate("google", {
@@ -634,22 +538,6 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook', {
 // GitHub Routes
 app.get('/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
 app.get('/auth/github/callback', passport.authenticate('github', {
-    successRedirect: 'http://localhost:5173',
-    failureRedirect: 'http://localhost:5173/login'
-}));
-
-// Microsoft Routes
-app.get('/auth/microsoft', passport.authenticate('azuread-openidconnect', { failureRedirect: 'http://localhost:5173/login' }));
-app.post('/auth/microsoft/callback',
-    passport.authenticate('azuread-openidconnect', { failureRedirect: 'http://localhost:5173/login' }),
-    (req, res) => {
-        res.redirect('http://localhost:5173');
-    }
-);
-
-// LinkedIn Routes
-app.get('/auth/linkedin', passport.authenticate('linkedin', { state: 'SOME STATE' }));
-app.get('/auth/linkedin/callback', passport.authenticate('linkedin', {
     successRedirect: 'http://localhost:5173',
     failureRedirect: 'http://localhost:5173/login'
 }));

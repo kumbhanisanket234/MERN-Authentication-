@@ -63,13 +63,6 @@ function Login() {
         window.open("http://localhost:3001/auth/github", "_self");
     }
 
-    const handleLoginWithLinkedIn = () => {
-        window.open("http://localhost:3001/auth/linkedin", "_self");
-    }
-
-    const handleLoginWithMicrosoft = () => {
-        window.open("http://localhost:3001/auth/microsoft", "_self");
-    }
 
     const hadleLoginWithFacebook = () => {
         window.open("http://localhost:3001/auth/facebook", "_self");
@@ -120,16 +113,7 @@ function Login() {
                                     <i className="fab fa-github"></i> Continue with GitHub
                                 </div>
                             </Button>
-                            <Button variant="contained" className="microsoft-btn" onClick={handleLoginWithMicrosoft}>
-                                <div className='d-flex align-items-center justify-content-between' style={{ width: '300px' }}>
-                                    <i className="fab fa-microsoft"></i> Continue with Microsoft
-                                </div>
-                            </Button>
-                            <Button variant="contained" className="linkedin-btn" onClick={handleLoginWithLinkedIn}>
-                                <div className='d-flex align-items-center justify-content-between' style={{ width: '300px' }}>
-                                    <i className="fab fa-linkedin"></i> Continue with LinkedIn
-                                </div>
-                            </Button>
+                    
                         </div>
                     </div>
                 </div>
